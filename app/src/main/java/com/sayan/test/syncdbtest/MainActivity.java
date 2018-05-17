@@ -45,33 +45,37 @@ public class MainActivity extends AppCompatActivity {
     public void onClickSaveData(View view) {
         EditText editText = (EditText) findViewById(R.id.editText);
         final String enteredName = editText.getText().toString();
-        service.saveNameToServer(enteredName).enqueue(new Callback<TestResponse>() {
-            @Override
-            public void onResponse(Call<TestResponse> call, Response<TestResponse> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        if (response.body().getStatus().equalsIgnoreCase("success")) {
-                            if (response.body().getSync().equalsIgnoreCase("Yes")) {
-                                populateWithTestData(appDatabase, enteredName, "Y");
+        ArrayList<TestRetrofitModel> retrofitModels = new ArrayList<>();
+        retrofitModels.add(new TestRetrofitModel(1, enteredName == null? "" : enteredName, "Y"));
+
+        service.saveNamesToServer(new TestRetrofitModelsHolder(retrofitModels))
+                .enqueue(new Callback<UpdateTestsResponse>() {
+                    @Override
+                    public void onResponse(Call<UpdateTestsResponse> call, Response<UpdateTestsResponse> response) {
+                        if (response.isSuccessful()) {
+                            if (response.body() != null) {
+                                if (response.body().getResult().equalsIgnoreCase("success")) {
+                                    if (response.body().getTests() != null) {
+                                        populateWithTestData(appDatabase, enteredName, "Y");
+                                    } else {
+                                        populateWithTestData(appDatabase, enteredName, "N");
+                                    }
+                                } else {
+                                    populateWithTestData(appDatabase, enteredName, "N");
+                                }
                             } else {
                                 populateWithTestData(appDatabase, enteredName, "N");
                             }
                         } else {
                             populateWithTestData(appDatabase, enteredName, "N");
                         }
-                    } else {
+                    }
+
+                    @Override
+                    public void onFailure(Call<UpdateTestsResponse> call, Throwable t) {
                         populateWithTestData(appDatabase, enteredName, "N");
                     }
-                } else {
-                    populateWithTestData(appDatabase, enteredName, "N");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<TestResponse> call, Throwable t) {
-                populateWithTestData(appDatabase, enteredName, "N");
-            }
-        });
+                });
     }
 
     public void updateStatus(View view) {
@@ -90,8 +94,8 @@ public class MainActivity extends AppCompatActivity {
                                 if (response.isSuccessful()) {
                                     if (response.body() != null) {
                                         if (response.body().getResult().equalsIgnoreCase("success")) {
-                                            if (response.body().getTests() != null){
-                                                if (!response.body().getTests().isEmpty()){
+                                            if (response.body().getTests() != null) {
+                                                if (!response.body().getTests().isEmpty()) {
                                                     ArrayList<Test> tests = (ArrayList<Test>) response.body().getTests();
                                                     for (Test test :
                                                             tests) {
@@ -110,6 +114,10 @@ public class MainActivity extends AppCompatActivity {
                         });
             }
         });
+    }
+
+    public void clear(View view) {
+        deleteAllRows();
     }
 
     //region UserDBModel
@@ -144,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
 
     //region TestModels
     ///////////////*******test********////////////////
-    void getAllTestModels(final AppDatabase appDatabase) {
+    private void getAllTestModels(final AppDatabase appDatabase) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -153,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    void getAllTestModelsBySyncStatus(final AppDatabase appDatabase, final String syncStatus, final QueryCallBack callBack) {
+    private void getAllTestModelsBySyncStatus(final AppDatabase appDatabase, final String syncStatus, final QueryCallBack callBack) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -164,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    void updateTestModel(final AppDatabase appDatabase, final String syncStatus, final String oldSyncStatus) {
+    private void updateTestModel(final AppDatabase appDatabase, final String syncStatus, final String oldSyncStatus) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -173,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    void updateTestModel(final AppDatabase appDatabase, final String syncStatus, final int id) {
+    private void updateTestModel(final AppDatabase appDatabase, final String syncStatus, final int id) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -190,6 +198,15 @@ public class MainActivity extends AppCompatActivity {
                 testDBModel.setName(name);
                 testDBModel.setSyncStatus(status);
                 appDatabase.testModelDao().insertAll(testDBModel);
+            }
+        }).start();
+    }
+
+    private void deleteAllRows() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                appDatabase.testModelDao().deleteAll();
             }
         }).start();
     }

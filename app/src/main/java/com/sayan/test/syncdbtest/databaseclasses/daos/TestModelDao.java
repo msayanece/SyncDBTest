@@ -28,6 +28,10 @@ public interface TestModelDao {
     @Delete
     void delete(TestDBModel test);
 
+
+    @Query("DELETE FROM test")
+    public void deleteAll();
+
     @Query("UPDATE test SET sync_status = :syncStatus WHERE sync_status = :oldSyncStatus")
     void updateSyncStatus(String syncStatus, String oldSyncStatus);
 
