@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.sayan.test.syncdbtest">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -16,16 +17,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <meta-data
-            android:name="AA_DB_NAME"
-            android:value="SayanSyncDB" />
-        <meta-data
-            android:name="AA_DB_VERSION"
-            android:value="1" />
-        <!--DO for speed up finding model classes-->
-        <meta-data
-            android:name="AA_MODELS"
-            android:value="com.sample.sayan.easysqliteactiveandroid.models.Student"/>
     </application>
 
 </manifest>
