@@ -1,26 +1,25 @@
-package com.sayan.test.syncdbtest.databaseclasses.tables;
+package com.sayan.test.syncdbtest.syncdbtestsdk.models;
 
-import android.arch.persistence.room.ColumnInfo;
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.PrimaryKey;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
+public class TestRetrofitModel {
 
-/**
- * Created by Admin on 12-01-2018.
- */
-
-@Entity(tableName = "test")
-public class TestModel {
-
-    @PrimaryKey(autoGenerate = true)
+    @SerializedName("id")
+    @Expose
     private int id;
-
-    @ColumnInfo(name = "name")
+    @SerializedName("name")
+    @Expose
     private String name;
-
-    @ColumnInfo(name = "sync_status")
+    @SerializedName("status")
+    @Expose
     private String syncStatus;
+
+    public TestRetrofitModel(int id, String name, String syncStatus) {
+        this.id = id;
+        this.name = name;
+        this.syncStatus = syncStatus;
+    }
 
     public int getId() {
         return id;

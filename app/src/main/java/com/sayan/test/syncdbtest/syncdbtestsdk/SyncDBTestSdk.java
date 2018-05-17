@@ -1,7 +1,6 @@
-package com.sayan.test.syncdbtest.databaseclasses.syncdbtestsdk;
+package com.sayan.test.syncdbtest.syncdbtestsdk;
 
 import android.content.Context;
-
 
 import com.sayan.test.syncdbtest.R;
 

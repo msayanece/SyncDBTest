@@ -1,4 +1,4 @@
-package com.sayan.test.syncdbtest.databaseclasses.syncdbtestsdk;
+package com.sayan.test.syncdbtest.syncdbtestsdk.responses;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

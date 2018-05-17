@@ -6,13 +6,18 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.sayan.test.syncdbtest.databaseclasses.AppDatabase;
-import com.sayan.test.syncdbtest.databaseclasses.syncdbtestsdk.InterceptorHTTPClientCreator;
-import com.sayan.test.syncdbtest.databaseclasses.syncdbtestsdk.Service;
-import com.sayan.test.syncdbtest.databaseclasses.syncdbtestsdk.SyncDBTestSdk;
-import com.sayan.test.syncdbtest.databaseclasses.syncdbtestsdk.TestResponse;
-import com.sayan.test.syncdbtest.databaseclasses.tables.TestModel;
+import com.sayan.test.syncdbtest.databaseclasses.tables.TestDBModel;
+import com.sayan.test.syncdbtest.syncdbtestsdk.InterceptorHTTPClientCreator;
+import com.sayan.test.syncdbtest.syncdbtestsdk.Service;
+import com.sayan.test.syncdbtest.syncdbtestsdk.SyncDBTestSdk;
+import com.sayan.test.syncdbtest.syncdbtestsdk.models.Test;
+import com.sayan.test.syncdbtest.syncdbtestsdk.models.TestRetrofitModel;
+import com.sayan.test.syncdbtest.syncdbtestsdk.models.TestRetrofitModelsHolder;
+import com.sayan.test.syncdbtest.syncdbtestsdk.responses.TestResponse;
+import com.sayan.test.syncdbtest.syncdbtestsdk.responses.UpdateTestsResponse;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -22,12 +27,15 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     private AppDatabase appDatabase;
+    private Service service;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         appDatabase = AppDatabase.getAppDatabase(this);
+        InterceptorHTTPClientCreator.createInterceptorHTTPClient(getApplicationContext());
+        service = new SyncDBTestSdk.Builder().build(getApplicationContext()).getService();
     }
 
     public void onClickFetchData(View view) {
@@ -37,9 +45,6 @@ public class MainActivity extends AppCompatActivity {
     public void onClickSaveData(View view) {
         EditText editText = (EditText) findViewById(R.id.editText);
         final String enteredName = editText.getText().toString();
-
-        InterceptorHTTPClientCreator.createInterceptorHTTPClient(getApplicationContext());
-        Service service = new SyncDBTestSdk.Builder().build(getApplicationContext()).getService();
         service.saveNameToServer(enteredName).enqueue(new Callback<TestResponse>() {
             @Override
             public void onResponse(Call<TestResponse> call, Response<TestResponse> response) {
@@ -70,17 +75,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateStatus(View view) {
-        getAllTestModelsBySyncStatus(appDatabase, "N", new QueryCallBack<TestModel>() {
+        getAllTestModelsBySyncStatus(appDatabase, "N", new QueryCallBack<TestDBModel>() {
             @Override
-            public void onSuccess(ArrayList<TestModel> models) {
+            public void onSuccess(ArrayList<TestDBModel> models) {
+                ArrayList<TestRetrofitModel> retrofitModels = new ArrayList<>();
+                for (TestDBModel model :
+                        models) {
+                    retrofitModels.add(new TestRetrofitModel(model.getId(), model.getName(), model.getSyncStatus()));
+                }
+                service.saveNamesToServer(new TestRetrofitModelsHolder(retrofitModels))
+                        .enqueue(new Callback<UpdateTestsResponse>() {
+                            @Override
+                            public void onResponse(Call<UpdateTestsResponse> call, Response<UpdateTestsResponse> response) {
+                                if (response.isSuccessful()) {
+                                    if (response.body() != null) {
+                                        if (response.body().getResult().equalsIgnoreCase("success")) {
+                                            if (response.body().getTests() != null){
+                                                if (!response.body().getTests().isEmpty()){
+                                                    ArrayList<Test> tests = (ArrayList<Test>) response.body().getTests();
+                                                    for (Test test :
+                                                            tests) {
+                                                        updateTestModel(appDatabase, "Y", test.getId());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
 
+                            @Override
+                            public void onFailure(Call<UpdateTestsResponse> call, Throwable t) {
+                            }
+                        });
             }
         });
-
-        updateTestModel(appDatabase, "Y", "N");
     }
 
-    //region User
+    //region UserDBModel
     ////////////////***********user***********///////////////
     void getAllUsers(final AppDatabase appDatabase) {
         new Thread(new Runnable() {
@@ -125,8 +157,9 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ArrayList<TestModel> testModels = appDatabase.testModelDao().findBySyncStatus(syncStatus);
-                callBack.onSuccess(testModels);
+                TestDBModel[] testDBModels = appDatabase.testModelDao().findBySyncStatus(syncStatus);
+                ArrayList<TestDBModel> models = new ArrayList<TestDBModel>(Arrays.asList(testDBModels));
+                callBack.onSuccess(models);
             }
         }).start();
     }
@@ -140,14 +173,23 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    void updateTestModel(final AppDatabase appDatabase, final String syncStatus, final int id) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                appDatabase.testModelDao().updateSyncStatus(syncStatus, id);
+            }
+        }).start();
+    }
+
     private void populateWithTestData(final AppDatabase appDatabase, final String name, final String status) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                TestModel testModel = new TestModel();
-                testModel.setName(name);
-                testModel.setSyncStatus(status);
-                appDatabase.testModelDao().insertAll(testModel);
+                TestDBModel testDBModel = new TestDBModel();
+                testDBModel.setName(name);
+                testDBModel.setSyncStatus(status);
+                appDatabase.testModelDao().insertAll(testDBModel);
             }
         }).start();
     }

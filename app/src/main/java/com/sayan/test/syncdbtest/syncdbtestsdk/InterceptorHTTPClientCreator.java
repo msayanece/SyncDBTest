@@ -1,9 +1,7 @@
-package com.sayan.test.syncdbtest.databaseclasses.syncdbtestsdk;
+package com.sayan.test.syncdbtest.syncdbtestsdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.provider.Settings;
-
 
 import java.io.IOException;
 import java.util.UUID;

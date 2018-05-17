@@ -6,7 +6,7 @@ import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 
 
-import com.sayan.test.syncdbtest.databaseclasses.tables.User;
+import com.sayan.test.syncdbtest.databaseclasses.tables.UserDBModel;
 
 import java.util.List;
 
@@ -14,19 +14,19 @@ import java.util.List;
 public interface UserDao {
 
     @Query("SELECT * FROM user")
-    List<User> getAll();
+    List<UserDBModel> getAll();
 
     @Query("SELECT * FROM user where first_name LIKE  :firstName AND last_name LIKE :lastName")
-    User findByName(String firstName, String lastName);
+    UserDBModel findByName(String firstName, String lastName);
 
     @Query("SELECT COUNT(*) from user")
     int countUsers();
 
     @Insert
-    void insertAll(User... users);
+    void insertAll(UserDBModel... userDBModels);
 
     @Delete
-    void delete(User user);
+    void delete(UserDBModel userDBModel);
 
     @Query("UPDATE user SET first_name = :firstName WHERE first_name = :oldFirstName")
     void updateFirstName(String firstName, String oldFirstName);

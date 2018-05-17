@@ -7,11 +7,11 @@ import android.content.Context;
 
 import com.sayan.test.syncdbtest.databaseclasses.daos.TestModelDao;
 import com.sayan.test.syncdbtest.databaseclasses.daos.UserDao;
-import com.sayan.test.syncdbtest.databaseclasses.tables.TestModel;
-import com.sayan.test.syncdbtest.databaseclasses.tables.User;
+import com.sayan.test.syncdbtest.databaseclasses.tables.TestDBModel;
+import com.sayan.test.syncdbtest.databaseclasses.tables.UserDBModel;
 
 
-@Database(entities = {User.class, TestModel.class}, version = 1)
+@Database(entities = {UserDBModel.class, TestDBModel.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
 
     private static AppDatabase instance;
